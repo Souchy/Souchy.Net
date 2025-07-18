@@ -7,9 +7,14 @@
 		<PackageId>Souchy.Net</PackageId>
 		<Version>1.0.3</Version>
 		<Authors>Souchy</Authors>
+		<Company>Souchy</Company>
 		<Description>.Net library.</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<RepositoryUrl></RepositoryUrl>
+		<RepositoryUrl>https://github.com/Souchy/Souchy.Net</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/Souchy/Souchy.Net</PackageProjectUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<ItemGroup>
