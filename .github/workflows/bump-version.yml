@@ -2,9 +2,11 @@ name: Bump Nuget package version
 on:
   push:
     branches:
-      - main
+      - asdf
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest

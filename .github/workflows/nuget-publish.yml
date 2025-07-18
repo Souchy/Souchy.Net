@@ -2,8 +2,11 @@ name: Publish NuGet Package
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -31,17 +34,19 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      - run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git add .
+          git commit -m "Bump project version to ${{ steps.bump.outputs.newVersion }}"
+          git tag v${{ steps.bump.outputs.newVersion }}
+          git push origin HEAD --tags
+
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
 
-#       - name: Set version from Git tag
-#         run: echo "GIT_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-
-#       - name: Generate version
-#         run: echo "PKG_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
-
       - name: Pack
-        run: dotnet pack --configuration Release --no-build -o out # /p:PackageVersion=${{ env.GIT_VERSION }}-${{ env.PKG_VERSION }}
+        run: dotnet pack --configuration Release --no-build -o out
 
       - name: Push to NuGet
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
