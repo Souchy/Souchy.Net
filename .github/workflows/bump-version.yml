@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - main
-
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,7 +32,9 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
           git add .
           git commit -m "Bump project version to ${{ steps.bump.outputs.newVersion }}"
           git tag v${{ steps.bump.outputs.newVersion }}
-          git push
+          git push origin HEAD --tags
