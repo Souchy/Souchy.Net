@@ -2,8 +2,8 @@ name: Publish NuGet Package
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -19,16 +19,29 @@ jobs:
           dotnet-version: '10.0.x' # or 8.0.x / 9.0.x
 
       - name: Restore dependencies
-        run: dotnet restore Souchy.Net/Souchy.Net.csproj
+        run: dotnet restore
+
+      - name: Bump build version
+        id: bump
+        uses: vers-one/dotnet-project-version-updater@v1.7
+        with:
+          file: "Souchy.Net/Souchy.Net.csproj"
+          version: bump-build
 
       - name: Build
-        run: dotnet build Souchy.Net/Souchy.Net.csproj --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test Souchy.Net/Souchy.Net.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+#       - name: Set version from Git tag
+#         run: echo "GIT_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+#       - name: Generate version
+#         run: echo "PKG_VERSION=${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Pack
-        run: dotnet pack Souchy.Net/Souchy.Net.csproj --configuration Release --no-build -o out
+        run: dotnet pack --configuration Release --no-build -o out # /p:PackageVersion=${{ env.GIT_VERSION }}-${{ env.PKG_VERSION }}
 
       - name: Push to NuGet
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
