@@ -53,8 +53,8 @@ jobs:
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
         # Push debug symbols to NuGet
-      - name: Push debug symbols to NuGet
-        run: dotnet nuget push "out/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+    #   - name: Push debug symbols to NuGet
+    #     run: dotnet nuget push "out/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
         # Push to GitHub Packages
       - name: Push to GitHub Packages
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"

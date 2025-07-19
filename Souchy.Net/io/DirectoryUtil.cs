@@ -6,13 +6,13 @@ namespace Souchy.Net.io;
 
 public static class DirectoryUtil
 {
-    public static string? FindDirectory(string path, string name)
+    public static DirectoryInfo? FindDirectory(string path, string name)
     {
         if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(name))
             return null;
         var dir = new DirectoryInfo(path);
         if (dir.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-            return dir.FullName;
+            return dir;
         foreach (var subDir in dir.GetDirectories())
         {
             var found = FindDirectory(subDir.FullName, name);
@@ -22,12 +22,22 @@ public static class DirectoryUtil
         return null;
     }
 
-    public static void MoveDirectoryRec(string source, string target, bool overwrite = true)
+    /// <summary>
+    /// Moves files and combines directories from source to target.
+    /// Old files are deleted if overwrite is true.
+    /// Old directories are not deleted so you can combine directories.
+    /// Source path is deleted.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="target">Replaces source path by target path for each file</param>
+    /// <param name="overwrite"></param>
+    public static void MoveDirectory(string source, string target, bool overwrite = true)
     {
-        var sourcePath = source.TrimEnd('\\', ' ');
-        var targetPath = target.TrimEnd('\\', ' ');
+        var sourcePath = source.Replace("/", "\\").TrimEnd('\\', ' ');
+        var targetPath = target.Replace("/", "\\").TrimEnd('\\', ' ');
         var files = Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories)
-                             .GroupBy(Path.GetDirectoryName);
+            .GroupBy(Path.GetDirectoryName);
+
         foreach (var folder in files)
         {
             var targetFolder = folder.Key.Replace(sourcePath, targetPath);
@@ -36,7 +46,6 @@ public static class DirectoryUtil
             {
                 var targetFile = Path.Combine(targetFolder, Path.GetFileName(file));
                 bool exists = File.Exists(targetFile);
-
                 if (overwrite && exists)
                 {
                     File.Delete(targetFile);
@@ -45,7 +54,6 @@ public static class DirectoryUtil
                 {
                     File.Move(file, targetFile);
                 }
-
             }
         }
         Directory.Delete(source, true);
@@ -53,8 +61,8 @@ public static class DirectoryUtil
 
     public static void CopyDirectory(string source, string target, bool overwrite = true)
     {
-        var sourcePath = source.TrimEnd('\\', ' ');
-        var targetPath = target.TrimEnd('\\', ' ');
+        var sourcePath = source.Replace("/", "\\").TrimEnd('\\', ' ');
+        var targetPath = target.Replace("/", "\\").TrimEnd('\\', ' ');
         var files = Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories)
                              .GroupBy(Path.GetDirectoryName);
         foreach (var folder in files)
