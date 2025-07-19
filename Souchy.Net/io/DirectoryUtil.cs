@@ -6,6 +6,22 @@ namespace Souchy.Net.io;
 
 public static class DirectoryUtil
 {
+    public static string? FindDirectory(string path, string name)
+    {
+        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(name))
+            return null;
+        var dir = new DirectoryInfo(path);
+        if (dir.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+            return dir.FullName;
+        foreach (var subDir in dir.GetDirectories())
+        {
+            var found = FindDirectory(subDir.FullName, name);
+            if (found != null)
+                return found;
+        }
+        return null;
+    }
+
     public static void MoveDirectoryRec(string source, string target, bool overwrite = true)
     {
         var sourcePath = source.TrimEnd('\\', ' ');
