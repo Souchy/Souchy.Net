@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<RepositoryUrl>https://github.com/Souchy/Souchy.Net</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<!-- <Version>1.0.8</Version> -->
+		<!-- <Version>1.0.9</Version> -->
 		<PackageId>Souchy.Net</PackageId>
 		<Authors>Souchy</Authors>
 		<Company>Souchy</Company>
