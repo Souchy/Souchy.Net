@@ -24,17 +24,17 @@ jobs:
           - name: Souchy.Net
             path: Souchy.Net
             csproj: Souchy.Net/Souchy.Net.csproj
-            tests: Souchy.Net.Tests/Souchy.Net.Tests.csproj
+            test: Souchy.Net.Test/Souchy.Net.Test.csproj
 
           - name: Souchy.Arch
             path: Souchy.Arch
             csproj: Souchy.Arch/Souchy.Arch.csproj
-            tests: Souchy.Arch.Tests/Souchy.Arch.Tests.csproj
+            test: Souchy.Arch.Test/Souchy.Arch.Test.csproj
 
           - name: Souchy.Godot
             path: Souchy.Godot
             csproj: Souchy.Godot/Souchy.Godot.csproj
-            tests: Souchy.Godot.Tests/Souchy.Godot.Tests.csproj
+            test: Souchy.Godot.Test/Souchy.Godot.Test.csproj
 
     steps:
       - name: Checkout code
@@ -66,7 +66,7 @@ jobs:
 
       - name: Test
         if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
-        run: dotnet test ${{ matrix.project.tests }} --configuration Release --no-build --verbosity normal
+        run: dotnet test ${{ matrix.project.test }} --configuration Release --no-build --verbosity normal
 
       - name: Pack
         if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
