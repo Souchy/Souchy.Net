@@ -6,11 +6,11 @@
 		<Nullable>enable</Nullable>
 		<RepositoryUrl>https://github.com/Souchy/Souchy.Net</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<!-- <Version>1.0.8</Version> -->
-		<PackageId>Souchy.Net</PackageId>
+		<!-- <Version>1.0.0</Version> -->
+		<PackageId>Souchy.Godot</PackageId>
 		<Authors>Souchy</Authors>
 		<Company>Souchy</Company>
-		<Description>.Net library.</Description>
+		<Description>Godot library</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Souchy/Souchy.Net</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -24,7 +24,10 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Godot.SourceGenerators" Version="4.5.0-dev.5" />
+		<PackageReference Include="GodotSharp" Version="4.5.0-dev.5" />
+		<PackageReference Include="GodotSharpEditor" Version="4.5.0-dev.5" />
+		<PackageReference Include="GodotSharpExtras" Version="0.5.0" />
 	</ItemGroup>
 
 </Project>

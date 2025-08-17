@@ -12,6 +12,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        project:
+          - name: Souchy.Net
+            path: Souchy.Net
+            csproj: Souchy.Net/Souchy.Net.csproj
+            tests: Souchy.Net.Tests/Souchy.Net.Tests.csproj
+
+          - name: Souchy.Arch
+            path: Souchy.Arch
+            csproj: Souchy.Arch/Souchy.Arch.csproj
+            tests: Souchy.Arch.Tests/Souchy.Arch.Tests.csproj
+
+          - name: Souchy.Godot
+            path: Souchy.Godot
+            csproj: Souchy.Godot/Souchy.Godot.csproj
+            tests: Souchy.Godot.Tests/Souchy.Godot.Tests.csproj
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,40 +39,55 @@ jobs:
         with:
           dotnet-version: '10.0.x' # or 8.0.x / 9.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Check for changes in ${{ matrix.project.name }}
+        id: changes
+        run: |
+          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- ${{ matrix.project.path }}; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Bump build version
-        id: bump
-        uses: vers-one/dotnet-project-version-updater@v1.7
-        with:
-          file: "Souchy.Net/Souchy.Net.csproj"
-          version: bump-build
+      - name: Restore dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: dotnet restore ${{ matrix.project.csproj }}
+
+      # - name: Bump build version
+      #   id: bump
+      #   uses: vers-one/dotnet-project-version-updater@v1.7
+      #   with:
+      #     file: "Souchy.Net/Souchy.Net.csproj"
+      #     version: bump-build
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build ${{ matrix.project.csproj }} --configuration Release --no-restore
 
-      - run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add .
-          git commit -m "Bump project version to ${{ steps.bump.outputs.newVersion }}"
-          git tag v${{ steps.bump.outputs.newVersion }}
-          git push origin HEAD --tags
+
+      # - run: |
+      #     git config user.name 'github-actions[bot]'
+      #     git config user.email 'github-actions[bot]@users.noreply.github.com'
+      #     git add .
+      #     git commit -m "Bump project version to ${{ steps.bump.outputs.newVersion }}"
+      #     git tag v${{ steps.bump.outputs.newVersion }}
+      #     git push origin HEAD --tags
 
       - name: Test
-        run: dotnet test --configuration Release --no-build --verbosity normal
+        if: steps.changes.outputs.changed == 'true'
+        run: dotnet test ${{ matrix.project.tests }} --configuration Release --no-build --verbosity normal
 
       - name: Pack
-        run: dotnet pack --configuration Release --no-build -o out
+        if: steps.changes.outputs.changed == 'true'
+        run: dotnet pack ${{ matrix.project.csproj }} --configuration Release --no-build -o out /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg
 
         # Push to NuGet
       - name: Push to NuGet
+        if: steps.changes.outputs.changed == 'true'
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
         # Push debug symbols to NuGet
-    #   - name: Push debug symbols to NuGet
-    #     run: dotnet nuget push "out/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      - name: Push debug symbols to NuGet
+        run: dotnet nuget push "out/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+    
         # Push to GitHub Packages
-      - name: Push to GitHub Packages
-        run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+      # - name: Push to GitHub Packages
+      #   run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
