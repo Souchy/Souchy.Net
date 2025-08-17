@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force build even if no changes detected?'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -51,43 +57,29 @@ jobs:
           fi
 
       - name: Restore dependencies
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: dotnet restore ${{ matrix.project.csproj }}
 
-      # - name: Bump build version
-      #   id: bump
-      #   uses: vers-one/dotnet-project-version-updater@v1.7
-      #   with:
-      #     file: "Souchy.Net/Souchy.Net.csproj"
-      #     version: bump-build
-
       - name: Build
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: dotnet build ${{ matrix.project.csproj }} --configuration Release --no-restore
 
-
-      # - run: |
-      #     git config user.name 'github-actions[bot]'
-      #     git config user.email 'github-actions[bot]@users.noreply.github.com'
-      #     git add .
-      #     git commit -m "Bump project version to ${{ steps.bump.outputs.newVersion }}"
-      #     git tag v${{ steps.bump.outputs.newVersion }}
-      #     git push origin HEAD --tags
-
       - name: Test
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: dotnet test ${{ matrix.project.tests }} --configuration Release --no-build --verbosity normal
 
       - name: Pack
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: dotnet pack ${{ matrix.project.csproj }} --configuration Release --no-build -o out /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg
 
         # Push to NuGet
       - name: Push to NuGet
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
         # Push debug symbols to NuGet
       - name: Push debug symbols to NuGet
+        if: steps.changes.outputs.changed == 'true' || github.event.inputs.force == 'true'
         run: dotnet nuget push "out/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
     
         # Push to GitHub Packages
