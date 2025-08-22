@@ -24,9 +24,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Godot.SourceGenerators" Version="4.5.0-dev.5" />
-		<PackageReference Include="GodotSharp" Version="4.5.0-dev.5" />
-		<PackageReference Include="GodotSharpEditor" Version="4.5.0-dev.5" />
+		<PackageReference Include="Godot.SourceGenerators" Version="4.5.0-beta.5" />
+		<PackageReference Include="GodotSharp" Version="4.5.0-beta.5" />
+		<PackageReference Include="GodotSharpEditor" Version="4.5.0-beta.5" />
 		<PackageReference Include="GodotSharpExtras" Version="0.5.0" />
 	</ItemGroup>
 
