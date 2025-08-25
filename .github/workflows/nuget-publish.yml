@@ -46,6 +46,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x' # or 8.0.x / 9.0.x
+          dotnet-quality: 'preview'
 
       - name: Check for changes in ${{ matrix.project.name }}
         id: changes
