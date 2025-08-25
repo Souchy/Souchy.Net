@@ -4,7 +4,7 @@ namespace Souchy.Arch;
 
 public record struct EntityRef(Entity Entity, int WorldVersion) : IEquatable<EntityRef>
 {
-    public readonly bool IsAlive()
+    public bool IsAlive()
     {
         var world = World.Worlds[Entity.WorldId];
         if (world == null) return false;
@@ -12,7 +12,7 @@ public record struct EntityRef(Entity Entity, int WorldVersion) : IEquatable<Ent
         return world.IsAlive(Entity);
     }
 
-    public readonly bool TryGet<T>(out T component) where T : struct
+    public bool TryGet<T>(out T component) where T : struct
     {
         var world = World.Worlds[Entity.WorldId];
         if (world == null)
@@ -33,7 +33,7 @@ public record struct EntityRef(Entity Entity, int WorldVersion) : IEquatable<Ent
         return world.TryGet(Entity, out component);
     }
 
-    public readonly T Get<T>() where T : struct
+    public T Get<T>()
     {
         var world = World.Worlds[Entity.WorldId];
         return world.Get<T>(Entity);
