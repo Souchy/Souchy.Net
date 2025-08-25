@@ -2,6 +2,7 @@ using Arch.Core;
 using Arch.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -13,6 +14,28 @@ public class ArchWorldTest
 {
     private static readonly Position v1 = new(Vector2.One);
     private static readonly Position v2 = new(Vector2.One * 2);
+
+    [Fact]
+    public void WhatHappensWithDifferentArchetype()
+    {
+        // World 1
+        var world1 = World.Create();
+        var entt1 = world1.Create(v1, new Velocity(Vector2.One));
+        world1.Destroy(entt1);
+        world1.Dispose();
+
+        // World 2
+        var world2 = World.Create();
+        var entt2 = world2.Create(v2);
+
+        Assert.Equal(entt1, entt2);
+        Assert.True(entt1.IsAlive());
+        Assert.Equal(entt1.Get<Position>().Value, entt2.Get<Position>().Value);
+        var vel1 = entt1.Get<Velocity>();
+        var vel2 = entt2.Get<Velocity>();
+        Assert.Equal(vel1.Value, Vector2.One * 2);
+        Assert.Equal(vel2.Value, Vector2.One * 2);
+    }
 
     [Fact]
     public void NothingToDo()
