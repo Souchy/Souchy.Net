@@ -31,13 +31,13 @@ public class Multimesh2DBuffer : Multimesh2DSpawner
         if (remaining > 0)
         {
             Multimesh.InstanceCount += remaining;
-            Multimesh.VisibleInstanceCount += remaining;
             VisibleCount += remaining;
             Array.Resize(ref buffer, Multimesh.InstanceCount * stride);
         }
+        Multimesh.VisibleInstanceCount = VisibleCount;
     }
 
-    public override void UpdateInstanceTransform(int i, Vector2 position, Vector2 velocity)
+    public override void SetInstanceTransform(int i, Vector2 position, Vector2 velocity)
     {
         var t = new Transform2D(velocity.Angle(), position);
         // calculate 2d transform and store in buffer
@@ -51,25 +51,38 @@ public class Multimesh2DBuffer : Multimesh2DSpawner
         buffer[WriteIndex + 7] = t.Origin.Y;
         WriteIndex += 8;
     }
-
-    public override void UpdateInstanceTransformColor(int i, Vector2 position, Vector2 velocity, Color color)
+    public override void SetInstanceColor(int i, Color color)
     {
-        UpdateInstanceTransform(i, position, velocity);
         buffer[WriteIndex + 0] = color.R;
         buffer[WriteIndex + 1] = color.G;
         buffer[WriteIndex + 2] = color.B;
         buffer[WriteIndex + 3] = color.A;
         WriteIndex += 4;
     }
-
-    public override void UpdateInstanceTransformColorData(int i, Vector2 position, Vector2 velocity, Color color, Color customData)
+    public override void SetInstanceCustomData(int i, Color customData)
     {
-        UpdateInstanceTransformColor(i, position, velocity, color);
-        buffer[WriteIndex + 0] = color.R;
-        buffer[WriteIndex + 1] = color.G;
-        buffer[WriteIndex + 2] = color.B;
-        buffer[WriteIndex + 3] = color.A;
+        buffer[WriteIndex + 0] = customData.R;
+        buffer[WriteIndex + 1] = customData.G;
+        buffer[WriteIndex + 2] = customData.B;
+        buffer[WriteIndex + 3] = customData.A;
         WriteIndex += 4;
+    }
+
+    public override void SetInstanceTransformColor(int i, Vector2 position, Vector2 velocity, Color color)
+    {
+        SetInstanceTransform(i, position, velocity);
+        SetInstanceColor(i, color);
+    }
+    public override void SetInstanceTransformColorData(int i, Vector2 position, Vector2 velocity, Color color, Color customData)
+    {
+        SetInstanceTransform(i, position, velocity);
+        SetInstanceColor(i, color);
+        SetInstanceCustomData(i, customData);
+    }
+    public override void SetInstanceTransformData(int i, Vector2 position, Vector2 velocity, Color customData)
+    {
+        SetInstanceTransform(i, position, velocity);
+        SetInstanceCustomData(i, customData);
     }
 
     public override void SendToGodot()

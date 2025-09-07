@@ -53,9 +53,9 @@ public class Multimesh2DSpawner
         if (remaining > 0)
         {
             Multimesh.InstanceCount += remaining;
-            Multimesh.VisibleInstanceCount += remaining;
             VisibleCount += remaining;
         }
+        Multimesh.VisibleInstanceCount = VisibleCount;
     }
 
     public virtual void RemoveInstances(int count)
@@ -72,36 +72,54 @@ public class Multimesh2DSpawner
         RemoveInstances(1);
     }
 
-    public virtual void UpdateInstanceTransform(int i, Vector2 position, Vector2 velocity)
+    public virtual void SetInstanceTransform(int i, Vector2 position, Vector2 velocity)
     {
         var t = new Transform2D(velocity.Angle(), position);
         Multimesh.SetInstanceTransform2D(i, t);
     }
-
-    public virtual void UpdateInstanceTransformColor(int i, Vector2 position, Vector2 velocity, Color color)
+    public virtual void SetInstanceColor(int i, Color color)
     {
-        UpdateInstanceTransform(i, position, velocity);
         Multimesh.SetInstanceColor(i, color);
     }
-    public virtual void UpdateInstanceTransformColorData(int i, Vector2 position, Vector2 velocity, Color color, Color customData)
+    public virtual void SetInstanceCustomData(int i, Color customData)
     {
-        UpdateInstanceTransformColor(i, position, velocity, color);
         Multimesh.SetInstanceCustomData(i, customData);
     }
 
-    public virtual void UpdateInstance(Vector2 position, Vector2 velocity)
+    public virtual void SetInstanceTransformColor(int i, Vector2 position, Vector2 velocity, Color color)
     {
-        UpdateInstanceTransform(CurrentInstance, position, velocity);
+        SetInstanceTransform(i, position, velocity);
+        Multimesh.SetInstanceColor(i, color);
+    }
+    public virtual void SetInstanceTransformColorData(int i, Vector2 position, Vector2 velocity, Color color, Color customData)
+    {
+        SetInstanceTransformColor(i, position, velocity, color);
+        Multimesh.SetInstanceCustomData(i, customData);
+    }
+    public virtual void SetInstanceTransformData(int i, Vector2 position, Vector2 velocity, Color customData)
+    {
+        SetInstanceTransform(i, position, velocity);
+        Multimesh.SetInstanceCustomData(i, customData);
+    }
+
+    public virtual void UpdateInstanceTransform(Vector2 position, Vector2 velocity)
+    {
+        SetInstanceTransform(CurrentInstance, position, velocity);
         CurrentInstance++;
     }
-    public virtual void UpdateInstance(Vector2 position, Vector2 velocity, Color color)
+    public virtual void UpdateInstanceTransformColor(Vector2 position, Vector2 velocity, Color color)
     {
-        UpdateInstanceTransformColor(CurrentInstance, position, velocity, color);
+        SetInstanceTransformColor(CurrentInstance, position, velocity, color);
         CurrentInstance++;
     }
-    public virtual void UpdateInstance(Vector2 position, Vector2 velocity, Color color, Color customData)
+    public virtual void UpdateInstanceTransformData(Vector2 position, Vector2 velocity, Color customData)
     {
-        UpdateInstanceTransformColorData(CurrentInstance, position, velocity, color, customData);
+        SetInstanceTransformData(CurrentInstance, position, velocity, customData);
+        CurrentInstance++;
+    }
+    public virtual void UpdateInstanceTransformColorData(Vector2 position, Vector2 velocity, Color color, Color customData)
+    {
+        SetInstanceTransformColorData(CurrentInstance, position, velocity, color, customData);
         CurrentInstance++;
     }
 
