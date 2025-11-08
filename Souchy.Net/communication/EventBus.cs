@@ -35,7 +35,7 @@ public class SubscribeAttribute : Attribute
     }
 }
 
-public delegate void MethodLambda(object? target, object?[] args);
+public delegate object? MethodLambda(object? target, object?[] args);
 
 public record Subscription
 {
@@ -61,10 +61,11 @@ public record Subscription
         Scoped = scoped;
     }
 
-    public void Invoke(object?[] args)
+    public object? Invoke(object?[] args)
     {
-        if (TryGetTarget(out var target))
-            ActionLambda(target, args);
+        if (!TryGetTarget(out var target))
+            return null;
+        return ActionLambda(target, args);
     }
 
     public bool TryGetTarget(out object? target)
@@ -130,7 +131,18 @@ public record Subscription
         Expression instance = method.IsStatic ? null : Expression.Convert(targetParam, method.DeclaringType!);
         var call = Expression.Call(instance, method, callArgs);
 
-        Expression body = call;
+        // If the method returns void, convert to (object?)null; otherwise convert return to object
+        Expression body;
+        if (method.ReturnType == typeof(void))
+        {
+            // create a block: call(method); return null;
+            var nullConst = Expression.Constant(null, typeof(object));
+            body = Expression.Block(call, nullConst);
+        }
+        else
+        {
+            body = Expression.Convert(call, typeof(object));
+        }
 
         var lambda = Expression.Lambda<MethodLambda>(body, targetParam, argsParam);
         return lambda.Compile();
@@ -139,18 +151,18 @@ public record Subscription
 
 public class EventBus
 {
-    public ConcurrentDictionary<string, ImmutableList<Subscription>> Subscriptions { get; } = [];
+    protected ConcurrentDictionary<string, ImmutableList<Subscription>> Subscriptions { get; } = [];
 
     public IEnumerable<Subscription> AllSubscriptions => Subscriptions.SelectMany(kv => kv.Value);
     public int SubscriptionCount => Subscriptions.Values.Sum(list => list.Count);
 
     #region Subscribing
-    public void Subscribe(params Delegate[] delegates)
+    public virtual void Subscribe(params Delegate[] delegates)
     {
         Subscribe(null, delegates);
     }
 
-    public void Subscribe(object? subscriber, params Delegate[] delegates)
+    public virtual void Subscribe(object? subscriber, params Delegate[] delegates)
     {
         var actors = delegates.Select(a => (a.Target, a.Method));
 
@@ -195,7 +207,7 @@ public class EventBus
         }
     }
 
-    private IEnumerable<string> ActionGetPaths(object? target, MethodInfo method)
+    protected virtual IEnumerable<string> ActionGetPaths(object? target, MethodInfo method)
     {
         var @params = method.GetParameters();
         var attrType = typeof(SubscribeAttribute);
@@ -213,12 +225,12 @@ public class EventBus
         }
     }
 
-    public void Unsubscribe(params Delegate[] actions) => Unsubscribe(null, actions);
+    public virtual void Unsubscribe(params Delegate[] actions) => Unsubscribe(null, actions);
 
     /// <summary>
     /// Remove all subscriptions that match the actions
     /// </summary>
-    public void Unsubscribe(object? subscriber, params Delegate[] actions)
+    public virtual void Unsubscribe(object? subscriber, params Delegate[] actions)
     {
         foreach (var action in actions)
         {
@@ -251,7 +263,7 @@ public class EventBus
     /// <summary>
     /// Remove all subscriptions that have the subscriber as target.
     /// </summary>
-    public void Unsubscribe(object subscriber)
+    public virtual void Unsubscribe(object subscriber)
     {
         foreach (var key in Subscriptions.Keys)
         {
@@ -280,19 +292,19 @@ public class EventBus
     #endregion
 
     #region Publish (synchronous)
-    public void Publish(params object[] args)
+    public virtual void Publish(params object[] args)
     {
         Publish(null, null, args);
     }
-    public void Publish(string path, params object[] args)
+    public virtual void Publish(string path, params object[] args)
     {
         Publish(path, null, args);
     }
-    public void PublishScoped(object scope, params object[] args)
+    public virtual void PublishScoped(object scope, params object[] args)
     {
         Publish(null, scope, args);
     }
-    public void Publish(string? path, object? scope, params object[] args)
+    public virtual void Publish(string? path, object? scope, params object[] args)
     {
         path ??= ""; //string.Join(",", args.Select(p => p?.GetType().Name));
         path += scope?.GetHashCode();
@@ -301,19 +313,19 @@ public class EventBus
     #endregion
 
     #region Publish (asynchronous)
-    public async Task PublishAsync(params object[] args)
+    public virtual async Task PublishAsync(params object[] args)
     {
         await PublishAsync(null, null, args).ConfigureAwait(false);
     }
-    public async Task PublishAsync(string path, params object?[] args)
+    public virtual async Task PublishAsync(string path, params object?[] args)
     {
         await PublishAsync(path, null, args).ConfigureAwait(false);
     }
-    public async Task PublishAsyncScoped(object scope, params object?[] args)
+    public virtual async Task PublishAsyncScoped(object scope, params object?[] args)
     {
         await PublishAsync(null, scope, args).ConfigureAwait(false);
     }
-    public async Task PublishAsync(string? path, object? scope, params object?[] args)
+    public virtual async Task PublishAsync(string? path, object? scope, params object?[] args)
     {
         path ??= ""; //string.Join(",", args.Select(p => p?.GetType().Name)); // doesnt work if we want to publish null args
         path += scope?.GetHashCode();
@@ -322,7 +334,11 @@ public class EventBus
         {
             try
             {
-                tasks.Add(Task.Run(() => sub.Invoke(args)));
+                var result = sub.Invoke(args);
+                if (result is Task t)
+                    tasks.Add(t);
+                else
+                    tasks.Add(Task.CompletedTask);
             }
             catch (Exception ex)
             {
@@ -336,7 +352,7 @@ public class EventBus
     #endregion
 
     #region Private methods
-    private void ProcessSubscribers(string path, object? scope, object?[] args, Action<Subscription> actionWrapper)
+    protected virtual void ProcessSubscribers(string path, object? scope, object?[] args, Action<Subscription> actionWrapper)
     {
         if (!Subscriptions.TryGetValue(path, out var snapshot)) return;
         var dead = new List<Subscription>();
@@ -353,7 +369,8 @@ public class EventBus
         }
         RemoveDeadSubscribers(path, dead);
     }
-    private void RemoveDeadSubscribers(string path, List<Subscription> deadSubscribers)
+
+    protected virtual void RemoveDeadSubscribers(string path, List<Subscription> deadSubscribers)
     {
         if (deadSubscribers.Count == 0)
             return;

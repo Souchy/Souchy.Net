@@ -17,6 +17,39 @@ public class EventBusTest
     }
 
     [Fact]
+    public void Check_Loop()
+    {
+        EventBus bus = new();
+        bus.Subscribe(this, OnRequest);
+        Assert.Single(bus.AllSubscriptions);
+
+        int count = 1_000_000;
+        var ev = new IncrementEvent(0);
+        for(int i = 0; i < count; i++)
+        {
+            bus.Publish(ev);
+        }
+
+        Assert.Equal(count, ev.i);
+    }
+    [Fact]
+    public async Task Check_Loop_ASync()
+    {
+        EventBus bus = new();
+        bus.Subscribe(this, OnRequest);
+        Assert.Single(bus.AllSubscriptions);
+
+        int count = 1_000_000;
+        var ev = new IncrementEvent(0);
+        for (int i = 0; i < count; i++)
+        {
+            await bus.PublishAsync(ev);
+        }
+
+        Assert.Equal(count, ev.i);
+    }
+
+    [Fact]
     public void Check_Synchronous_Duplicate()
     {
         EventBus bus = new();
